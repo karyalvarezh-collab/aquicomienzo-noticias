@@ -1,0 +1,36 @@
+
+# Actualiza noticias.json una vez al día (09:00/10:00 hora de Chile).
+name: Actualizar noticias
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  noticias:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Obtener noticias
+        run: node fetch-noticias.mjs
+
+      - name: Guardar cambios
+        run: |
+          if git diff --quiet noticias.json; then
+            echo "Sin cambios"
+          else
+            git config user.name "aquicomienzo-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add noticias.json
+            git commit -m "Noticias: actualización automática"
+            git push
+          fi
